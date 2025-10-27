@@ -9,6 +9,14 @@
 
 using namespace std;
 
+// Function to ensure output displays immediately
+void setupConsole() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    cout.tie(NULL);
+    setvbuf(stdout, nullptr, _IONBF, 0); // Disable output buffering
+}
+
 // Function to generate random scores
 void generateRandomScores(Person& person, int numHomework) {
     random_device rd;
@@ -80,26 +88,29 @@ void displayStudents(vector<Person>& students, bool useAverage, bool useMedian) 
         }
     }
     
-    // Display header
-    cout << "\n" << string(70, '=') << endl;
-    cout << left << setw(15) << "Name" 
-         << setw(15) << "Surname";
+    // IMPROVED HEADERS - CLEAR AND PROFESSIONAL
+    cout << "\n" << string(80, '=') << endl;
+    cout << "STUDENT GRADE REPORT" << endl;
+    cout << string(80, '=') << endl;
+    
+    cout << left << setw(20) << "First Name" 
+         << setw(20) << "Last Name";
     
     if (useAverage && useMedian) {
-        cout << right << setw(20) << "Final (Avg.)" 
-             << setw(20) << "Final (Med.)" << endl;
+        cout << right << setw(20) << "Final Grade (Avg)" 
+             << setw(20) << "Final Grade (Med)" << endl;
     } else if (useAverage) {
-        cout << right << setw(20) << "Final (Avg.)" << endl;
+        cout << right << setw(20) << "Final Grade (Avg)" << endl;
     } else {
-        cout << right << setw(20) << "Final (Med.)" << endl;
+        cout << right << setw(20) << "Final Grade (Med)" << endl;
     }
     
-    cout << string(70, '-') << endl;
+    cout << string(80, '-') << endl;
     
     // Display students
     for (auto& student : students) {
-        cout << left << setw(15) << student.getFirstName()
-             << setw(15) << student.getSurname();
+        cout << left << setw(20) << student.getFirstName()
+             << setw(20) << student.getSurname();
         
         if (useAverage && useMedian) {
             // Calculate and display both
@@ -116,29 +127,72 @@ void displayStudents(vector<Person>& students, bool useAverage, bool useMedian) 
         }
     }
     
-    cout << string(70, '=') << endl;
+    cout << string(80, '=') << endl;
+    
+    // ADDED STATISTICS SUMMARY
+    if (!students.empty()) {
+        double totalAvg = 0.0, totalMed = 0.0;
+        double highestGrade = 0.0, lowestGrade = 10.0;
+        
+        for (auto& student : students) {
+            double grade;
+            if (useAverage && useMedian) {
+                student.calculateFinalGradeAverage();
+                grade = student.getFinalGrade();
+            } else if (useAverage) {
+                student.calculateFinalGradeAverage();
+                grade = student.getFinalGrade();
+            } else {
+                student.calculateFinalGradeMedian();
+                grade = student.getFinalGrade();
+            }
+            
+            totalAvg += grade;
+            if (grade > highestGrade) highestGrade = grade;
+            if (grade < lowestGrade) lowestGrade = grade;
+        }
+        
+        double averageGrade = totalAvg / students.size();
+        
+        cout << "\n=== STATISTICS SUMMARY ===" << endl;
+        cout << "Total Students: " << students.size() << endl;
+        cout << "Average Grade: " << fixed << setprecision(2) << averageGrade << endl;
+        cout << "Highest Grade: " << fixed << setprecision(2) << highestGrade << endl;
+        cout << "Lowest Grade: " << fixed << setprecision(2) << lowestGrade << endl;
+        cout << "Calculation Method: " << (useAverage && useMedian ? "Both Average & Median" : 
+                                          (useAverage ? "Average" : "Median")) << endl;
+    }
 }
 
 int main() {
+    // SETUP CONSOLE FOR IMMEDIATE OUTPUT
+    setupConsole();
+    
     vector<Person> students;
     int choice;
     
-    cout << "=== Student Grading System ===" << endl;
+    // FORCE OUTPUT TO APPEAR IMMEDIATELY
+    cout << "=== STUDENT GRADING SYSTEM ===" << endl;
+    cout.flush(); // Force output to display
+    
     cout << "\nSelect input method:" << endl;
     cout << "1. Manual input" << endl;
     cout << "2. Read from file" << endl;
     cout << "3. Generate random data" << endl;
     cout << "Choice: ";
+    cout.flush(); // Force output to display
     cin >> choice;
     
     if (choice == 1) {
         // Manual input
         int numStudents;
         cout << "How many students? ";
+        cout.flush();
         cin >> numStudents;
         
         for (int i = 0; i < numStudents; ++i) {
             cout << "\n--- Student " << (i + 1) << " ---" << endl;
+            cout.flush();
             Person person;
             cin >> person;
             students.push_back(person);
@@ -151,6 +205,7 @@ int main() {
         cout << "3. students1000000.txt" << endl;
         cout << "4. Custom filename" << endl;
         cout << "Choice: ";
+        cout.flush();
         
         int fileChoice;
         cin >> fileChoice;
@@ -162,6 +217,7 @@ int main() {
             case 3: filename = "students1000000.txt"; break;
             case 4:
                 cout << "Enter filename: ";
+                cout.flush();
                 cin >> filename;
                 break;
             default:
@@ -170,12 +226,15 @@ int main() {
         
         students = readFromFile(filename);
         cout << "Read " << students.size() << " students from file." << endl;
+        cout.flush();
     } else if (choice == 3) {
         // Random generation
         int numStudents, numHomework;
         cout << "How many students? ";
+        cout.flush();
         cin >> numStudents;
         cout << "How many homework assignments? ";
+        cout.flush();
         cin >> numHomework;
         
         for (int i = 0; i < numStudents; ++i) {
@@ -187,6 +246,7 @@ int main() {
     
     if (students.empty()) {
         cout << "No students to process." << endl;
+        cout.flush();
         return 0;
     }
     
@@ -196,12 +256,19 @@ int main() {
     cout << "2. Median" << endl;
     cout << "3. Both" << endl;
     cout << "Choice: ";
+    cout.flush();
     cin >> choice;
     
     bool useAverage = (choice == 1 || choice == 3);
     bool useMedian = (choice == 2 || choice == 3);
     
     displayStudents(students, useAverage, useMedian);
+    
+    // Add pause at the end to see results
+    cout << "\nProgram completed. Press Enter to exit...";
+    cout.flush();
+    cin.ignore();
+    cin.get();
     
     return 0;
 }
