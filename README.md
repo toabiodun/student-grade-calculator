@@ -75,3 +75,18 @@ The program expects:
   - Average and median calculations
   - Random score generation
   - Formatted output with sorting
+
+#  Note about large data files (for lecturer)
+
+The program was tested with three datasets, as required:
+
+- `students10000.txt`   – 10,000 students (stored in this GitHub repo)
+- `students100000.txt`  – 100,000 students
+- `students1000000.txt` – 1,000,000 students
+
+Because GitHub has a 100 MB file size limit, `students1000000.txt` (≈120 MB)
+cannot be pushed to the GitHub repository.
+
+ All three data files (`students10000.txt`, `students100000.txt`, `students1000000.txt`)
+are included in the ZIP archive submitted to Moodle together with this project.
+The code supports all three datasets via the “Read from file” option in the menu.
