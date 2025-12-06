@@ -1,31 +1,26 @@
-# Version 0.2 - Preparing folder
+📘 Student Grade Calculator – Version v0.2
 
-Student Grade Calculator – Version v0.2
-Version v0.2 is a refactored and extended version of the Student Grade Calculator. It focuses on cleaner code structure, exception handling, and performance testing using std::vector on large datasets.
+Version v0.2 is a refactored and extended upgrade of the original Student Grade Calculator. This release focuses on improved code structure, exception handling, and high-performance testing using std::vector on large datasets.
 
-What is new in v0.2
-Compared to v0.1, this version adds:
+✨ What Is New in v0.2
 
-Refactored project structure (separate .h and .cpp files)
+Compared to v0.1, this version introduces:
+• Cleaner, modular project structure (.h and .cpp separated)
+• Exception handling for invalid files and inputs
+• Automatic generation of large random datasets
+• Performance benchmarking using std::vector
+• Splitting students into Passed and Failed categories
+• Writing results into dataset-specific output files
 
-Exception handling for file errors and invalid input
+📁 Project Structure (v0.2 Folder)
 
-Automatic generation of large random datasets
-
-Performance testing using std::vector
-
-Splitting students into “passed” and “failed” groups
-
-Writing the results into separate output files for each dataset size
-
-Project Structure (v0.2 folder)
-The v0.2 folder contains at minimum:
+The v0.2 directory contains:
 main.cpp
 Person.cpp
 Person.h
 README.md
 
-During performance tests the program generates additional text files:
+During performance testing, the following files are automatically generated:
 students_1000_passed_vector.txt
 students_1000_failed_vector.txt
 students_10000_passed_vector.txt
@@ -35,60 +30,42 @@ students_100000_failed_vector.txt
 students_1000000_passed_vector.txt
 students_1000000_failed_vector.txt
 
-These files contain the passed and failed students for each dataset size.
+These files store the passed and failed students for each dataset size.
 
-How the Program Works in v0.2
+⚙️ How the Program Works in v0.2
 
-The user starts the program and sees a menu.
+The user starts the program and sees the main menu.
 
-Option 4 runs the performance test using std::vector.
+Choosing Option 4 runs the vector performance test.
 
-The program automatically generates random students for datasets of size 1000, 10000, 100000, and 1000000.
+The program generates datasets of sizes:
+• 1,000
+• 10,000
+• 100,000
+• 1,000,000
 
-For each dataset size, the program:
+For each dataset, the program:
+• Generates random names (Name1 Surname1, …)
+• Generates random homework + exam scores (1–10)
+• Computes final grade using:
+FinalGrade = 0.4 * average(hw) + 0.6 * exam
+• Sorts students
+• Splits into:
+– Passed (Final >= 5.0)
+– Failed (Final < 5.0)
+• Writes results into:
+students_N_passed_vector.txt
+students_N_failed_vector.txt
+• Measures timing for:
+– Generation
+– Sorting
+– Splitting
+– Writing
 
-Generates names (Name1 Surname1, Name2 Surname2, etc.)
+📊 Example Performance Output (Actual Program Results)
 
-Generates homework and exam scores (1–10)
-
-Calculates the final grade using the average formula: FinalGrade = 0.4 * average(homework) + 0.6 * exam
-
-Sorts all students
-
-Splits them into two groups: passed (final >= 5.0) and failed (final < 5.0)
-
-Writes results into output files named students_N_passed_vector.txt and students_N_failed_vector.txt
-
-Measures the time required for generation, sorting, splitting, and writing
-
-Example performance output:
-Testing with 1000 students: Generate 2 ms, Sort 0 ms, Split 0 ms, Write 2 ms
-Testing with 10000 students: Generate 20 ms, Sort 5 ms, Split 1 ms, Write 9 ms
-Testing with 100000 students: Generate 180 ms, Sort 73 ms, Split 20 ms, Write 78 ms
-Testing with 1000000 students: Generate 1797 ms, Sort 1021 ms, Split 305 ms, Write 785 ms
-
-Exception Handling
-v0.2 includes exception handling for safer execution.
-
-If an input file cannot be opened, an error message is displayed
-
-Invalid data lines are skipped or handled safely
-
-Vector operations avoid out-of-range errors
-
-User menu input is validated
-
-Compilation (v0.2)
-To compile this version:
-g++ -std=c++11 -O2 -o student_grading_v02 main.cpp Person.cpp
-
-Running the Program
-On Windows PowerShell (inside v0.2 folder):
-.\student_grading_v02.exe
-Choose option 4 to run the performance test.
-
-Performance Output Used in README
 === VECTOR PERFORMANCE TEST (v0.2) ===
+
 --- Testing with 1000 students ---
 Generate: 2 ms
 Sort: 0 ms
@@ -117,21 +94,44 @@ Split: 305 ms
 Write: 785 ms
 Passed: 584838, Failed: 415162
 
-Large Dataset Notice
-The file students_1000000_passed_vector.txt exceeds GitHub’s upload limit (25 MB) and cannot be uploaded to the repository.
-It is included in the ZIP archive submitted to Moodle as required.
-The program successfully generated all datasets, including the largest one.
+⚠️ Large Dataset Notice
 
-Relation to Other Versions
-v0.1: basic implementation (manual input, file input, average/median, formatting)
-v0.2: refactored version + exception handling + vector performance tests
-v0.25: same logic as v0.2 but implemented using std::list and std::deque
+The file students_1000000_passed_vector.txt exceeds GitHub’s 25MB upload limit.
+It is included only in the ZIP submitted to Moodle, as required by the assignment.
+All datasets were successfully generated by the program during testing.
 
-Files in this Folder
+🛡 Exception Handling in v0.2
+
+This version uses try/catch blocks to prevent crashes and improve reliability:
+• File-open failures produce clear error messages
+• Malformed data lines are skipped or handled safely
+• Vector operations avoid out-of-range access
+• User input is validated
+
+🔧 Compilation (v0.2)
+
+Compile using g++:
+g++ -std=c++11 -O2 -o student_grading_v02 main.cpp Person.cpp
+
+▶️ Running the Program
+
+In Windows PowerShell (inside the v0.2 folder):
+.\student_grading_v02.exe
+Select option 4 to run the performance benchmark.
+
+📌 Version Relationships
+
+• v0.1 – manual/file input, average/median, base logic
+• v0.2 – refactoring, exceptions, vector performance tests
+• v0.25 – same as v0.2 but implemented using std::list and std::deque
+
+📄 Files in This Folder
+
 main.cpp
 Person.cpp
 Person.h
 README.md
 
-Author
+👤 Author
+
 Abiodun Tomiwa (toabiodun)
