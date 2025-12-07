@@ -8,7 +8,6 @@
 #include <string>
 #include <limits>
 #include <type_traits>
-#include <fstream>   // NEW: for file output
 
 #include "Person.h"
 
@@ -21,12 +20,13 @@ using Clock = chrono::high_resolution_clock;
 using ms    = chrono::milliseconds;
 
 // -----------------------------------------------
-// Faster console I/O
+// Faster console I/O (but keep cin tied to cout)
 // -----------------------------------------------
 void setupConsole()
 {
     ios::sync_with_stdio(false);
-    cin.tie(nullptr);
+    // Do not untie cin from cout – we want prompts to be visible.
+    // cin.tie(nullptr);
 }
 
 // -----------------------------------------------
@@ -38,6 +38,7 @@ void fillRandomScores(Person& p, int index)
     static mt19937 gen(rd());
     static uniform_int_distribution<int> dist(1, 10);
 
+    // Example names: Name1 Surname1, Name2 Surname2, ...
     p.setFirstName("Name" + to_string(index + 1));
     p.setSurname("Surname" + to_string(index + 1));
 
@@ -65,6 +66,21 @@ inline bool isFailed(const Person& p)
 }
 
 // -----------------------------------------------
+// Helper: reserve capacity only for std::vector<Person>
+// -----------------------------------------------
+template <typename Container>
+void maybeReserve(Container&, size_t)
+{
+    // default: do nothing
+}
+
+template <>
+void maybeReserve<std::vector<Person>>(std::vector<Person>& c, size_t count)
+{
+    c.reserve(count);
+}
+
+// -----------------------------------------------
 // Generate N students into any container type
 // Uses std::vector, std::list or std::deque
 // -----------------------------------------------
@@ -72,12 +88,7 @@ template <typename Container>
 Container generateStudents(size_t count)
 {
     Container students;
-
-    // Reserve capacity only for vector (optimization)
-    if (std::is_same<Container, std::vector<Person>>::value)
-    {
-        students.reserve(count);
-    }
+    maybeReserve(students, count); // only does something for vector<Person>
 
     for (size_t i = 0; i < count; ++i)
     {
@@ -122,8 +133,8 @@ void strategy2_moveFailed(Container& students,
     failed.clear();
 
     // Partition: [passed | failed]
-    auto partitionPoint = std::stable_partition(
-        students.begin(), students.end(), isPassed);
+    typename Container::iterator partitionPoint =
+        std::stable_partition(students.begin(), students.end(), isPassed);
 
     // Move failed students into separate container
     std::move(partitionPoint, students.end(),
@@ -139,9 +150,9 @@ void strategy2_moveFailed(Container& students,
 template <typename Func>
 long long measureMs(Func&& f)
 {
-    auto start = Clock::now();
+    Clock::time_point start = Clock::now();
     f();
-    auto end   = Clock::now();
+    Clock::time_point end   = Clock::now();
     return chrono::duration_cast<ms>(end - start).count();
 }
 
@@ -155,10 +166,12 @@ void runTestsForContainer(const string& containerName)
     cout << "  " << containerName << " (Strategy 1 vs Strategy 2)\n";
     cout << "======================================\n";
 
-    const vector<size_t> sizes = {1000, 10000, 100000};
+    const size_t sizesArray[] = {1000, 10000, 100000};
+    const size_t numSizes = sizeof(sizesArray) / sizeof(sizesArray[0]);
 
-    for (size_t n : sizes)
+    for (size_t idx = 0; idx < numSizes; ++idx)
     {
+        size_t n = sizesArray[idx];
         Container students;
 
         // 1) Generate students
@@ -182,7 +195,7 @@ void runTestsForContainer(const string& containerName)
         // 4) Print results
         cout << "\n--- N = " << n << " students ---\n";
         cout << "Generate:    " << genTime       << " ms\n";
-        cout << "Strategy 1:  " << strategy1Time << " ms  (copy → passed + failed)\n";
+        cout << "Strategy 1:  " << strategy1Time << " ms  (copy -> passed + failed)\n";
         cout << "Strategy 2:  " << strategy2Time << " ms  (move failed, shrink base)\n";
 
         cout << "Sizes (Strategy 1): passed = " << passed1.size()
@@ -193,63 +206,13 @@ void runTestsForContainer(const string& containerName)
 }
 
 // -----------------------------------------------
-// NEW: save any container of Person to a text file
-// -----------------------------------------------
-template <typename Container>
-void saveContainerToFile(const string& filename, const Container& cont)
-{
-    ofstream out(filename.c_str());
-    if (!out)
-    {
-        cerr << "ERROR: Could not open file " << filename << " for writing.\n";
-        return;
-    }
-
-    for (const auto& p : cont)
-    {
-        out << p.getFirstName() << ' '
-            << p.getSurname()   << ' '
-            << p.getFinalGrade() << '\n';
-    }
-
-    out.close();
-}
-
-// -----------------------------------------------
-// NEW: generate one vector dataset and write
-// the four strategy output files
-// -----------------------------------------------
-void generateExampleFilesForVector()
-{
-    const size_t N = 100000; // you can change to 1000 if you want smaller files
-
-    // 1) base students
-    vector<Person> students = generateStudents<vector<Person>>(N);
-
-    // 2) Strategy 1
-    vector<Person> passed1, failed1;
-    strategy1_splitCopy(students, passed1, failed1);
-
-    // 3) Strategy 2
-    vector<Person> students2 = students;
-    vector<Person> failed2;
-    strategy2_moveFailed(students2, failed2);
-
-    // 4) Write to files
-    saveContainerToFile("students_strategy1_passed.txt", passed1);
-    saveContainerToFile("students_strategy1_failed.txt",  failed1);
-    saveContainerToFile("students_strategy2_passed.txt", students2); // base = passed
-    saveContainerToFile("students_strategy2_failed.txt",  failed2);
-}
-
-// -----------------------------------------------
 // Main menu for v1.0
 // -----------------------------------------------
 int main()
 {
     setupConsole();
 
-    cout << "=== STUDENT GRADING SYSTEM – v1.0 ===\n\n";
+    cout << "=== STUDENT GRADING SYSTEM - v1.0 ===\n\n";
     cout << "This version compares two splitting strategies\n";
     cout << "for three containers: std::vector, std::list, std::deque.\n\n";
     cout << "1. Test std::vector\n";
@@ -257,6 +220,7 @@ int main()
     cout << "3. Test std::deque\n";
     cout << "4. Test ALL containers\n";
     cout << "Choice: ";
+    cout.flush();   // make sure the prompt appears
 
     int choice = 0;
     if (!(cin >> choice))
@@ -269,36 +233,27 @@ int main()
     {
         if (choice == 1)
         {
-            runTestsForContainer<std::vector<Person>>("std::vector<Person>");
+            runTestsForContainer<std::vector<Person> >("std::vector<Person>");
         }
         else if (choice == 2)
         {
-            runTestsForContainer<std::list<Person>>("std::list<Person>");
+            runTestsForContainer<std::list<Person> >("std::list<Person>");
         }
         else if (choice == 3)
         {
-            runTestsForContainer<std::deque<Person>>("std::deque<Person>");
+            runTestsForContainer<std::deque<Person> >("std::deque<Person>");
         }
         else if (choice == 4)
         {
-            runTestsForContainer<std::vector<Person>>("std::vector<Person>");
-            runTestsForContainer<std::list<Person>>("std::list<Person>");
-            runTestsForContainer<std::deque<Person>>("std::deque<Person>");
+            runTestsForContainer<std::vector<Person> >("std::vector<Person>");
+            runTestsForContainer<std::list<Person> >("std::list<Person>");
+            runTestsForContainer<std::deque<Person> >("std::deque<Person>");
         }
         else
         {
             cout << "Unknown option. Exiting.\n";
             return 0;
         }
-
-        // NEW: after tests, also generate example files for the report
-        cout << "\n\nGenerating example output files for std::vector (N = 100000)...\n";
-        generateExampleFilesForVector();
-        cout << "Created files:\n";
-        cout << "  students_strategy1_passed.txt\n";
-        cout << "  students_strategy1_failed.txt\n";
-        cout << "  students_strategy2_passed.txt\n";
-        cout << "  students_strategy2_failed.txt\n";
     }
     catch (const std::exception& ex)
     {
