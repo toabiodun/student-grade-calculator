@@ -8,6 +8,7 @@
 #include <string>
 #include <limits>
 #include <type_traits>
+#include <fstream>   // NEW: for file output
 
 #include "Person.h"
 
@@ -33,12 +34,10 @@ void setupConsole()
 // -----------------------------------------------
 void fillRandomScores(Person& p, int index)
 {
-    // static so the generator is reused (faster)
     static random_device rd;
     static mt19937 gen(rd());
     static uniform_int_distribution<int> dist(1, 10);
 
-    // Example names: Name1 Surname1, Name2 Surname2, ...
     p.setFirstName("Name" + to_string(index + 1));
     p.setSurname("Surname" + to_string(index + 1));
 
@@ -75,7 +74,7 @@ Container generateStudents(size_t count)
     Container students;
 
     // Reserve capacity only for vector (optimization)
-    if constexpr (std::is_same<Container, std::vector<Person>>::value)
+    if (std::is_same<Container, std::vector<Person>>::value)
     {
         students.reserve(count);
     }
@@ -194,6 +193,56 @@ void runTestsForContainer(const string& containerName)
 }
 
 // -----------------------------------------------
+// NEW: save any container of Person to a text file
+// -----------------------------------------------
+template <typename Container>
+void saveContainerToFile(const string& filename, const Container& cont)
+{
+    ofstream out(filename.c_str());
+    if (!out)
+    {
+        cerr << "ERROR: Could not open file " << filename << " for writing.\n";
+        return;
+    }
+
+    for (const auto& p : cont)
+    {
+        out << p.getFirstName() << ' '
+            << p.getSurname()   << ' '
+            << p.getFinalGrade() << '\n';
+    }
+
+    out.close();
+}
+
+// -----------------------------------------------
+// NEW: generate one vector dataset and write
+// the four strategy output files
+// -----------------------------------------------
+void generateExampleFilesForVector()
+{
+    const size_t N = 100000; // you can change to 1000 if you want smaller files
+
+    // 1) base students
+    vector<Person> students = generateStudents<vector<Person>>(N);
+
+    // 2) Strategy 1
+    vector<Person> passed1, failed1;
+    strategy1_splitCopy(students, passed1, failed1);
+
+    // 3) Strategy 2
+    vector<Person> students2 = students;
+    vector<Person> failed2;
+    strategy2_moveFailed(students2, failed2);
+
+    // 4) Write to files
+    saveContainerToFile("students_strategy1_passed.txt", passed1);
+    saveContainerToFile("students_strategy1_failed.txt",  failed1);
+    saveContainerToFile("students_strategy2_passed.txt", students2); // base = passed
+    saveContainerToFile("students_strategy2_failed.txt",  failed2);
+}
+
+// -----------------------------------------------
 // Main menu for v1.0
 // -----------------------------------------------
 int main()
@@ -241,6 +290,15 @@ int main()
             cout << "Unknown option. Exiting.\n";
             return 0;
         }
+
+        // NEW: after tests, also generate example files for the report
+        cout << "\n\nGenerating example output files for std::vector (N = 100000)...\n";
+        generateExampleFilesForVector();
+        cout << "Created files:\n";
+        cout << "  students_strategy1_passed.txt\n";
+        cout << "  students_strategy1_failed.txt\n";
+        cout << "  students_strategy2_passed.txt\n";
+        cout << "  students_strategy2_failed.txt\n";
     }
     catch (const std::exception& ex)
     {
